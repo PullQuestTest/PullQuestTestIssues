@@ -11,78 +11,73 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
-    
+
     env:
       APTOS_BACKEND_URL: https://your-render-app-url.onrender.com
       DEFAULT_STAKE_AMOUNT: 100
-    
+
     steps:
-    - name: Checkout PR code
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-    
-    - name: Get PR Information
-      id: pr_info
-      run: |
-        echo "pr_id=${{ github.event.pull_request.number }}" >> "$GITHUB_OUTPUT"
-        echo "author=${{ github.event.pull_request.user.login }}" >> "$GITHUB_OUTPUT"
-        echo "title=${{ github.event.pull_request.title }}" >> "$GITHUB_OUTPUT"
-        echo "repo=${{ github.event.repository.name }}" >> "$GITHUB_OUTPUT"
-        echo "owner=${{ github.repository_owner }}" >> "$GITHUB_OUTPUT"
-    
-    - name: Set Stake Amount
-      id: complexity
-      run: |
-        git fetch origin ${{ github.event.pull_request.base.ref }}
-        
-        files_changed=$(git diff --name-only origin/${{ github.event.pull_request.base.ref }}...HEAD | wc -l)
-        lines_changed=$(git diff --stat origin/${{ github.event.pull_request.base.ref }}...HEAD | tail -1 | grep -oE '[0-9]+' | head -1 || echo "0")
-        
-        stake_amount=100
-        
-        echo "files_changed=$files_changed" >> "$GITHUB_OUTPUT"
-        echo "lines_changed=$lines_changed" >> "$GITHUB_OUTPUT"
-        echo "stake_amount=$stake_amount" >> "$GITHUB_OUTPUT"
-    
-    - name: Set Developer Aptos Address
-      id: aptos_address
-      run: |
-        developer_address="0x30338ce6e4a050f1bc123928d594483f5378511d4c2fdff5645d7d5d7ff47379"
-        echo "developer_address=$developer_address" >> "$GITHUB_OUTPUT"
-    
-    - name: Stake Tokens on PR
-      id: stake
-      run: |
-        payload=$(jq -n \
-          --argjson prId "${{ steps.pr_info.outputs.pr_id }}" \
-          --arg developerAddress "${{ steps.aptos_address.outputs.developer_address }}" \
-          --argjson amount "${{ steps.complexity.outputs.stake_amount }}" \
-          '{
-            prId: $prId,
-            developerAddress: $developerAddress,
-            amount: $amount
-          }')
-        
-        response=$(curl --fail --silent --show-error \
-          -X POST "$APTOS_BACKEND_URL/stake" \
-          -H "Content-Type: application/json" \
-          -H "Accept: application/json" \
-          --data-binary "$payload")
-        
-        tx_hash=$(echo "$response" | jq -r '.transactionHash // "unknown"')
-        echo "transaction_hash=$tx_hash" >> "$GITHUB_OUTPUT"
-    
-    - name: Comment on PR
-      if: success()
-      uses: actions/github-script@v7
-      with:
-        script: |
-          const { data: comment } = await github.rest.issues.createComment({
-            issue_number: ${{ steps.pr_info.outputs.pr_id }},
-            owner: '${{ steps.pr_info.outputs.owner }}',
-            repo: '${{ steps.pr_info.outputs.repo }}',
-            body: `## 🎯 PullQuest Auto-Stake Complete!
+      - name: Checkout PR code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get PR Information
+        id: pr_info
+        run: |
+          echo "pr_id=${{ github.event.pull_request.number }}" >> "$GITHUB_OUTPUT"
+          echo "author=${{ github.event.pull_request.user.login }}" >> "$GITHUB_OUTPUT"
+          echo "title=${{ github.event.pull_request.title }}" >> "$GITHUB_OUTPUT"
+          echo "repo=${{ github.event.repository.name }}" >> "$GITHUB_OUTPUT"
+          echo "owner=${{ github.repository_owner }}" >> "$GITHUB_OUTPUT"
+
+      - name: Set Stake Amount
+        id: complexity
+        run: |
+          git fetch origin ${{ github.event.pull_request.base.ref }}
+          files_changed=$(git diff --name-only origin/${{ github.event.pull_request.base.ref }}...HEAD | wc -l)
+          lines_changed=$(git diff --stat origin/${{ github.event.pull_request.base.ref }}...HEAD | tail -1 | grep -oE '[0-9]+' | head -1 || echo "0")
+          stake_amount=${{ env.DEFAULT_STAKE_AMOUNT }}
+          echo "files_changed=$files_changed" >> "$GITHUB_OUTPUT"
+          echo "lines_changed=$lines_changed" >> "$GITHUB_OUTPUT"
+          echo "stake_amount=$stake_amount" >> "$GITHUB_OUTPUT"
+
+      - name: Set Developer Aptos Address
+        id: aptos_address
+        run: |
+          developer_address="0x30338ce6e4a050f1bc123928d594483f5378511d4c2fdff5645d7d5d7ff47379"
+          echo "developer_address=$developer_address" >> "$GITHUB_OUTPUT"
+
+      - name: Stake Tokens on PR
+        id: stake
+        run: |
+          payload=$(jq -n \
+            --argjson prId "${{ steps.pr_info.outputs.pr_id }}" \
+            --arg developerAddress "${{ steps.aptos_address.outputs.developer_address }}" \
+            --argjson amount "${{ steps.complexity.outputs.stake_amount }}" \
+            '{
+              prId: $prId,
+              developerAddress: $developerAddress,
+              amount: $amount
+            }')
+          response=$(curl --fail --silent --show-error \
+            -X POST "$APTOS_BACKEND_URL/stake" \
+            -H "Content-Type: application/json" \
+            -H "Accept: application/json" \
+            --data-binary "$payload")
+          tx_hash=$(echo "$response" | jq -r '.transactionHash // "unknown"')
+          echo "transaction_hash=$tx_hash" >> "$GITHUB_OUTPUT"
+
+      - name: Comment on PR
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: comment } = await github.rest.issues.createComment({
+              issue_number: parseInt('${{ steps.pr_info.outputs.pr_id }}'),
+              owner: '${{ steps.pr_info.outputs.owner }}',
+              repo: '${{ steps.pr_info.outputs.repo }}',
+              body: `## 🎯 PullQuest Auto-Stake Complete!
 
 **PR Details:**
 - **PR #**: ${{ steps.pr_info.outputs.pr_id }}
@@ -102,18 +97,18 @@ jobs:
 *This stake was automatically created by PullQuest. Merge this PR to earn rewards! 🚀*
 
 [View Transaction on Aptos Explorer](https://explorer.aptoslabs.com/txn/${{ steps.stake.outputs.transaction_hash }}?network=devnet)`
-          });
-    
-    - name: Handle Staking Failure
-      if: failure()
-      uses: actions/github-script@v7
-      with:
-        script: |
-          await github.rest.issues.createComment({
-            issue_number: ${{ steps.pr_info.outputs.pr_id }},
-            owner: '${{ steps.pr_info.outputs.owner }}',
-            repo: '${{ steps.pr_info.outputs.repo }}',
-            body: `## ⚠️ PullQuest Auto-Stake Failed
+            });
+
+      - name: Handle Staking Failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.issues.createComment({
+              issue_number: parseInt('${{ steps.pr_info.outputs.pr_id }}'),
+              owner: '${{ steps.pr_info.outputs.owner }}',
+              repo: '${{ steps.pr_info.outputs.repo }}',
+              body: `## ⚠️ PullQuest Auto-Stake Failed
 
 There was an issue staking tokens for this PR. Please check the [workflow logs](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details.
 
@@ -123,14 +118,14 @@ There was an issue staking tokens for this PR. Please check the [workflow logs](
 - **Intended Stake**: ${{ steps.complexity.outputs.stake_amount }} tokens
 
 Please contact the maintainers if this issue persists.`
-          });
-    
-    - name: Workflow Summary
-      if: always()
-      run: |
-        echo "🎉 Auto-Stake Workflow Complete!"
-        echo "📋 Summary:"
-        echo "  - PR: #${{ steps.pr_info.outputs.pr_id }}"
-        echo "  - Author: ${{ steps.pr_info.outputs.author }}"
-        echo "  - Stake Amount: ${{ steps.complexity.outputs.stake_amount }}"
-        echo "  - Transaction: ${{ steps.stake.outputs.transaction_hash }}"
+            });
+
+      - name: Workflow Summary
+        if: always()
+        run: |
+          echo "🎉 Auto-Stake Workflow Complete!"
+          echo "📋 Summary:"
+          echo "  - PR: #${{ steps.pr_info.outputs.pr_id }}"
+          echo "  - Author: ${{ steps.pr_info.outputs.author }}"
+          echo "  - Stake Amount: ${{ steps.complexity.outputs.stake_amount }}"
+          echo "  - Transaction: ${{ steps.stake.outputs.transaction_hash }}"
