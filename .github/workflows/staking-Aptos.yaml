@@ -13,7 +13,7 @@ jobs:
       pull-requests: write
 
     env:
-      APTOS_BACKEND_URL: https://your-render-app-url.onrender.com
+      APTOS_BACKEND_URL: https://aptos-backend-3.onrender.com/
       DEFAULT_STAKE_AMOUNT: 100
 
     steps:
@@ -79,24 +79,15 @@ jobs:
               repo: '${{ steps.pr_info.outputs.repo }}',
               body: `## 🎯 PullQuest Auto-Stake Complete!
 
-**PR Details:**
-- **PR #**: ${{ steps.pr_info.outputs.pr_id }}
-- **Author**: @${{ steps.pr_info.outputs.author }}
-- **Title**: ${{ steps.pr_info.outputs.title }}
+            **Stake Details:**
+            - **PR #**: ${{ steps.pr_info.outputs.pr_id }}
+            - **Author**: @${{ steps.pr_info.outputs.author }}
+            - **Staked Amount**: ${{ steps.complexity.outputs.stake_amount }} tokens
+            - **Developer Address**: \`${{ steps.aptos_address.outputs.developer_address }}\`
+            - **Files Changed**: ${{ steps.complexity.outputs.files_changed }}
+            - **Lines Changed**: ${{ steps.complexity.outputs.lines_changed }}
 
-**Stake Information:**
-- **Amount Staked**: ${{ steps.complexity.outputs.stake_amount }} tokens 💰
-- **Aptos Address**: \`${{ steps.aptos_address.outputs.developer_address }}\`
-- **Transaction Hash**: \`${{ steps.stake.outputs.transaction_hash }}\`
-
-**PR Complexity Analysis:**
-- **Files Changed**: ${{ steps.complexity.outputs.files_changed }}
-- **Lines Changed**: ${{ steps.complexity.outputs.lines_changed }}
-
----
-*This stake was automatically created by PullQuest. Merge this PR to earn rewards! 🚀*
-
-[View Transaction on Aptos Explorer](https://explorer.aptoslabs.com/txn/${{ steps.stake.outputs.transaction_hash }}?network=devnet)`
+            [View Transaction on Aptos Explorer](https://explorer.aptoslabs.com/txn/${{ steps.stake.outputs.transaction_hash }}?network=devnet)`
             });
 
       - name: Handle Staking Failure
@@ -110,14 +101,14 @@ jobs:
               repo: '${{ steps.pr_info.outputs.repo }}',
               body: `## ⚠️ PullQuest Auto-Stake Failed
 
-There was an issue staking tokens for this PR. Please check the [workflow logs](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details.
+            There was an issue staking tokens for this PR. Please check the [workflow logs](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details.
 
-**PR Details:**
-- **PR #**: ${{ steps.pr_info.outputs.pr_id }}
-- **Author**: @${{ steps.pr_info.outputs.author }}
-- **Intended Stake**: ${{ steps.complexity.outputs.stake_amount }} tokens
+            **PR Details:**
+            - **PR #**: ${{ steps.pr_info.outputs.pr_id }}
+            - **Author**: @${{ steps.pr_info.outputs.author }}
+            - **Intended Stake**: ${{ steps.complexity.outputs.stake_amount }} tokens
 
-Please contact the maintainers if this issue persists.`
+            Please contact the maintainers if this issue persists.`
             });
 
       - name: Workflow Summary
