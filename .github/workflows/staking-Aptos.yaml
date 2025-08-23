@@ -13,7 +13,7 @@ jobs:
       pull-requests: write
 
     env:
-      APTOS_BACKEND_URL: http://aptos-backend-3.onrender.com/
+      APTOS_BACKEND_URL: https://aptos-backend-3.onrender.com
       DEFAULT_STAKE_AMOUNT: 100
 
     steps:
