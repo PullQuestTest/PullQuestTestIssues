@@ -8,7 +8,7 @@ const Appbar = () => {
       <Link to={"/dashboard"} className="font-medium">
         GoPAY App
       </Link>
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-2">
         <div>Hello</div>
         <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center line-clamp-1 cursor-pointer text-slate-400">
           U
