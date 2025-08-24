@@ -13,7 +13,7 @@ const Signin = () => {
     <div className="w-full h-screen flex items-center justify-center">
       <div className="w-md md:w-lg px-6 py-6 flex flex-col items-center justify-center gap-4 shadow-lg rounded-lg">
         <Heading label={"Sign In"} />
-        <SubHeading label={"Welcome back!"} />
+        <SubHeading label={"Welcome back!!"} />
         <form className="flex flex-col gap-4 w-full">
           <InputBox
             label={"Email"}
