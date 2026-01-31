@@ -14,7 +14,7 @@ jobs:
       pull-requests: read
       issues: read
     env:
-      BACKEND_URL: https://pullquestgithubbackend-jxhb.onrender.com
+      BACKEND_URL: https://innerve-x-github-workflow-be-xi.vercel.app
     
     steps:
     - name: Check if comment mentions @pullquestai and adds XP

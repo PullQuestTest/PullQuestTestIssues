@@ -11,7 +11,7 @@ jobs:
       contents: read
       pull-requests: write
     env:
-      BACKEND_URL: https://pullquestgithubbackend-jxhb.onrender.com
+      BACKEND_URL: https://innerve-x-github-workflow-be-xi.vercel.app
     steps:
     # 1️⃣  Check out the PR branch
     - name: Checkout PR code

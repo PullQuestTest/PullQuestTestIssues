@@ -13,7 +13,7 @@ jobs:
       pull-requests: write
 
     env:
-      BACKEND_URL: https://pullquestgithubbackend-jxhb.onrender.com
+      BACKEND_URL: https://innerve-x-github-workflow-be-xi.vercel.app
 
     steps:
       - name: Show context
